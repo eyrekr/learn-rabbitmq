@@ -3,10 +3,10 @@ package org.rx;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import org.rx.tool.Just;
 
 import java.io.Closeable;
 
-import static org.rx.Silence.silently;
 
 class Receiver implements Closeable {
     final String queueName;
@@ -37,7 +37,6 @@ class Receiver implements Closeable {
 
     @Override
     public void close() {
-        silently(channel::close);
-        silently(connection::close);
+        Just.run(channel::close, connection::close);
     }
 }
