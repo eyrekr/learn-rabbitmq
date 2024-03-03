@@ -17,7 +17,7 @@ class Sender {
              final var channel = connection.createChannel()) {
             // make sure the queue exists
             channel.queueDeclare(queueName, false, false, false, null);
-            System.out.println("Sending a message...");
+            System.out.println("Sender> Sending a message...");
             channel.basicPublish("", queueName, null, message.getBytes());
         }
     }

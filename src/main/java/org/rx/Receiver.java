@@ -24,8 +24,9 @@ class Receiver {
              final var channel = connection.createChannel()) {
             // make sure the queue exists
             channel.queueDeclare(queueName, false, false, false, null);
+            System.out.println("Receiver> Waiting for messages...");
             while (!endOfWorld.get()) {
-                System.out.println("Waiting for messages...");
+                System.out.print(".");
                 channel.basicConsume( // this is non-blocking!
                         queueName,
                         true,
@@ -45,5 +46,6 @@ class Receiver {
                         });
             }
         }
+        System.out.println("Receiver> Stopped receiving");
     }
 }

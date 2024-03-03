@@ -1,11 +1,10 @@
 package org.rx.tool;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Just {
-
-    private static final Executor EXECUTOR_SERVICES = Executors.newFixedThreadPool(8);
+    private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(8);
 
     public static void run(final Proc... procs) {
         for (final Proc proc : procs)
@@ -29,7 +28,11 @@ public class Just {
     }
 
     public static void async(final Proc... procs) {
-        for (final var proc : procs) EXECUTOR_SERVICES.execute(() -> run(proc));
+        for (final var proc : procs) EXECUTOR_SERVICE.execute(() -> run(proc));
+    }
+
+    public static void shutdown() {
+        EXECUTOR_SERVICE.shutdown();
     }
 
     @FunctionalInterface
