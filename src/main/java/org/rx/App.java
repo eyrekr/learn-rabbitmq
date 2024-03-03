@@ -1,23 +1,48 @@
 package org.rx;
 
 import org.rx.api.ManagementApi;
+import org.rx.tool.Just;
+
+import static org.rx.tool.Just.async;
 
 public class App {
+    private final String queueName = "hello";
+    private final ManagementApi managementApi = new ManagementApi();
 
-    /**
-     * {@code  docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3}
-     */
-    public static void main(String[] args) throws Exception {
-        final String queueName = "hello";
-        new Sender(queueName).send("HELLO RABBIT");
-        new ManagementApi().queues().print(
-                "\n",
-                q -> String.format("%-30s  durable: %b  auto-delete: %b  messages: %,5d  state: %s",
+    private App receive() {
+        async(() -> new Receiver(queueName).receive());
+        return this;
+    }
+
+    private App send() {
+        async(() -> {
+            final Sender sender = new Sender(queueName);
+            for (int i = 0; i < 10; i++) {
+                sender.send("HELLO RABBIT");
+                Just.sleep(100);
+            }
+            sender.send("QUIT");
+        });
+        return this;
+    }
+
+    private App printQueues() {
+        managementApi.queues()
+                .map(q -> String.format("%-50s  durable: %b  auto-delete: %b  messages: %,5d  state: %s",
                         q.name(),
                         q.durable(),
                         q.autoDelete(),
                         q.messages(),
-                        q.state()));
-        new Receiver(queueName).receive();
+                        q.state()))
+                .each(System.out::println);
+        return this;
+    }
+
+
+    /**
+     * {@code  docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3}
+     */
+    public static void main(String[] args) {
+        new App().printQueues().receive().send();
     }
 }

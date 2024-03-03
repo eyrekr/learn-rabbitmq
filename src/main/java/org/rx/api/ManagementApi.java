@@ -21,12 +21,12 @@ public class ManagementApi {
 
     public Seq<Queue> queues() {
         return Just.get(() -> {
-            final String encodedCredentials = Base64.getEncoder().encodeToString("guest:guest".getBytes(StandardCharsets.UTF_8));
-            final HttpRequest request = HttpRequest.newBuilder()
+            final var encodedCredentials = Base64.getEncoder().encodeToString("guest:guest".getBytes(StandardCharsets.UTF_8));
+            final var request = HttpRequest.newBuilder()
                     .uri(URI.create(RABBITMQ_MANAGEMENT_API_URL))
                     .header("Authorization", "Basic " + encodedCredentials)
                     .build();
-            final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            final var response = client.send(request, HttpResponse.BodyHandlers.ofString());
             return Seq.fromArray(gson.fromJson(response.body(), Queue[].class));
         });
     }
@@ -34,33 +34,33 @@ public class ManagementApi {
     public record Queue(
             Map<String, Object> arguments,
             @SerializedName("auto_delete") boolean autoDelete,
-            @SerializedName("consumer_capacity") int consumerCapacity,
-            @SerializedName("consumer_utilisation") int consumerUtilisation,
-            @SerializedName("consumers") int consumers,
+            @SerializedName("consumer_capacity") long consumerCapacity,
+            @SerializedName("consumer_utilisation") long consumerUtilisation,
+            @SerializedName("consumers") long consumers,
             boolean durable,
             boolean exclusive,
             @SerializedName("exclusive_consumer_tag") String exclusiveConsumerTag,
             @SerializedName("idle_since") String idleSince,
-            int memory,
-            int messages,
+            long memory,
+            long messages,
             String name,
             String node,
-            int reductions,
+            long reductions,
             String state,
             String type,
             String vhost) {
     }
 
     public record Stats(
-            int ack,
-            int deliver,
-            @SerializedName("deliver_get") int deliverGet,
-            @SerializedName("deliver_no_akc") int deliverNotAck,
-            int get,
-            @SerializedName("get_empty") int getEmpty,
-            @SerializedName("get_no_ack") int getNoAck,
-            int publish,
-            int redeliver,
-            int messages) {
+            long ack,
+            long deliver,
+            @SerializedName("deliver_get") long deliverGet,
+            @SerializedName("deliver_no_akc") long deliverNotAck,
+            long get,
+            @SerializedName("get_empty") long getEmpty,
+            @SerializedName("get_no_ack") long getNoAck,
+            long publish,
+            long redeliver,
+            long messages) {
     }
 }

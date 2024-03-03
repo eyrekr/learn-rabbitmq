@@ -1,7 +1,5 @@
 package org.rx;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
 class Sender {
@@ -15,8 +13,8 @@ class Sender {
     }
 
     void send(final String message) throws Exception {
-        try (final Connection connection = connectionFactory.newConnection();
-             final Channel channel = connection.createChannel()) {
+        try (final var connection = connectionFactory.newConnection();
+             final var channel = connection.createChannel()) {
             // make sure the queue exists
             channel.queueDeclare(queueName, false, false, false, null);
             System.out.println("Sending a message...");

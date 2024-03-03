@@ -1,42 +1,49 @@
 package org.rx;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.rabbitmq.client.ConnectionFactory;
-import org.rx.tool.Just;
 
-import java.io.Closeable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
-class Receiver implements Closeable {
-    final String queueName;
-    final Connection connection;
-    final Channel channel;
+class Receiver {
+    private final String queueName;
+    private final ConnectionFactory connectionFactory;
+    private final Gson gson = new GsonBuilder().setLenient().setPrettyPrinting().create();
+    private final AtomicBoolean endOfWorld = new AtomicBoolean();
 
-    Receiver(String queueName) throws Exception {
+    Receiver(String queueName) {
         this.queueName = queueName;
-        final ConnectionFactory connectionFactory = new ConnectionFactory();
+        this.connectionFactory = new ConnectionFactory();
         connectionFactory.setHost("localhost");
-        this.connection = connectionFactory.newConnection();
-        this.channel = connection.createChannel();
     }
 
     void receive() throws Exception {
-        // make sure the queue exists
-        channel.queueDeclare(queueName, false, false, false, null);
-        System.out.println("Waiting for messages...");
-        channel.basicConsume( // this is non-blocking!
-                queueName,
-                true,
-                (consumerTag, message) -> {
-                    System.out.printf("%s: %s\n", consumerTag, new String(message.getBody()));
-                },
-                consumerTag -> {
-                });
-    }
-
-    @Override
-    public void close() {
-        Just.run(channel::close, connection::close);
+        try (final var connection = connectionFactory.newConnection();
+             final var channel = connection.createChannel()) {
+            // make sure the queue exists
+            channel.queueDeclare(queueName, false, false, false, null);
+            while (!endOfWorld.get()) {
+                System.out.println("Waiting for messages...");
+                channel.basicConsume( // this is non-blocking!
+                        queueName,
+                        true,
+                        (consumerTag, message) -> {
+                            final var body = new String(message.getBody());
+                            if ("QUIT".equals(body)) endOfWorld.set(true);
+                            /*
+                            System.out.printf("%s: %s\n%s\n%s\n",
+                                    consumerTag,
+                                    body,
+                                    gson.toJson(message.getEnvelope()),
+                                    gson.toJson(message.getProperties()));
+                             */
+                            System.out.println(body);
+                        },
+                        consumerTag -> {
+                        });
+            }
+        }
     }
 }
